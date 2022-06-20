@@ -1,0 +1,341 @@
+//Константи
+@api - це урла сервака тоесть http://ec2-3-72-233-128.eu-central-1.compute.amazonaws.com:8080/api
+@required - це означає шо поле обовязкове
+@len - длінна строки
+@return - шо вертає
+@Example:: - приклад запросу
+
+
+//Авторизація і реєстрація
+
+@api/users/register POST
+userName: string // @len 3 - 100 | @required
+password: string //@len 3 - 100 | @required
+description: string //@len 3 - 100
+
+@Example::
+
+{
+    "userName": "Hello",
+    "password": "5427",
+    "description": "zxczxc"
+}
+
+
+@return {
+    "statusCode": 200,
+    "statusMessage": "OK",
+    "data": {
+        "id": 2,
+        "userName": "Hello",
+        "password": "$2b$08$9qm/SyqgZGTAGJD8nZJC5uhY3IBdVDoPH1SnCsRMxZe8JXWcowQjK",
+        "description": "zxczxc",
+        "userToken": "1655596892321564c125d-ec5d-4ddf-a91a-52094c366392",
+        "isAdmin": false,
+        "updatedAt": "2022-06-19T00:01:32.330Z",
+        "createdAt": "2022-06-19T00:01:32.330Z"
+    }
+}
+
+
+@api/users/authorize POST
+
+userName: string // @len 3 - 100 | @required
+password: string //@len 3 - 100 | @required
+
+
+@Example::
+{
+    "userName": "Hello1",
+    "password": "5427"
+}
+
+
+@return {
+    "statusCode": 200,
+    "statusMessage": "OK",
+    "data": {
+        "id": 4,
+        "userToken": "16555970845075c4be0f1-8b64-4c4c-a9df-1a55dafd940f",
+        "userName": "Hello1",
+        "description": null,
+        "isAdmin": false,
+        "createdAt": "2022-06-19T00:04:44.000Z",
+        "updatedAt": "2022-06-19T00:04:44.000Z"
+    }
+}
+
+
+//Пости
+
+//це типу список самих постів які є але не деталка
+@api/posts/posts-mapping GET
+
+
+@return {
+    "statusCode": 200,
+    "statusMessage": "OK",
+    "data": [
+        {
+            "id": 4,
+            "userToken": "165541267244837807d2f-257e-427f-a0a8-328835680b18",
+            "post_hash": "posts_1655573432053_1273120e-d93b-4e25-a3f5-9f7fd6322674",
+            "title": "C#",
+            "createdAt": "2022-06-18T17:30:32.000Z",
+            "updatedAt": "2022-06-18T17:30:32.000Z"
+        },
+        {
+            "id": 5,
+            "userToken": "165541267244837807d2f-257e-427f-a0a8-328835680b18",
+            "post_hash": "posts_1655573437084_729afa48-2964-4bf7-b4ed-fc1cce80bb6c",
+            "title": "C#",
+            "createdAt": "2022-06-18T17:30:37.000Z",
+            "updatedAt": "2022-06-18T17:30:37.000Z"
+        },
+	     ]
+	}
+
+
+
+
+------------------------------------------------------
+//може тільки адмін
+// цепочка така -----
+ти відправляєш перший раз
+без постхеша, і получаєш його в респонсі
+далі його відправляєш обовязково
+інакше це буде рахуватись іншим постом
+@api/posts/add-post-pipe POST Content-Type: 'multipart/form-data'
+
+
+file: File // це файл з пикера
+content: string // це текст
+userToken: string // @required це токен юзера, і адмінський він тільки один
+post_hash: string // хеш токена, перший раз не обовязковий далі - @required
+title: string //@len 3 - 100 | @required
+
+
+@Example:: 
+{
+	v discordi photo
+}
+
+@return{
+    "statusCode": 200,
+    "statusMessage": "OK",
+    "data": {
+        "post_hash": "posts_1655597786825_631336de-a145-45de-b26b-ebb960a144be" // це хеш який нада поставити на наступну відправку частини поста
+    }
+}
+
+
+
+@api/posts/post-mapping/:post_hash?userToken=    DELETE
+
+:post_hash // @required це хеш поста
+?userToken // @required це токен юзера, і адмінський він тільки один
+
+@Example::
+
+DELETE http://localhost:8080/api/posts/post-mapping/posts_1655597861111_444e0739-fc0c-4c40-b6e7-9ee641968d1d?userToken=165541267244837807d2f-257e-427f-a0a8-328835680b18
+
+
+@return {
+    "statusCode": 200,
+    "statusMessage": "OK",
+    "data": {
+        "affected": 1 // це забий
+    }
+}
+
+
+
+//це деталка поста
+@api/posts/posts-chunk/:post_hash GET 
+
+
+:post_hash // @required це хеш поста
+
+
+@Example:: 
+http://localhost:8080/api/posts/posts-chunk/posts_1655598273167_0f0d0c54-d67c-4deb-bcb3-a4b387a454ce
+
+
+@return {
+    "statusCode": 200,
+    "statusMessage": "OK",
+    "data": [
+        {
+            "id": 31,
+            "userToken": "165541267244837807d2f-257e-427f-a0a8-328835680b18",
+            "image": "6734a544-b2c7-4546-a98a-d221a210ac4f.png",
+            "content": "one5656656565",
+            "post_hash": "posts_1655598273167_0f0d0c54-d67c-4deb-bcb3-a4b387a454ce",
+            "title": "C#zxczxczxc",
+            "post_chunk_hash": "chunk1655598273167_5885a6db-1d26-46ae-ac1c-547d95259fbe",
+            "createdAt": "2022-06-19T00:24:33.000Z",
+            "updatedAt": "2022-06-19T00:24:33.000Z"
+        },
+        {
+            "id": 32,
+            "userToken": "165541267244837807d2f-257e-427f-a0a8-328835680b18",
+            "image": "1142c999-5475-4da2-9ccc-2f8b5c6ef952.png",
+            "content": "one5656656565",
+            "post_hash": "posts_1655598273167_0f0d0c54-d67c-4deb-bcb3-a4b387a454ce",
+            "title": "C#zxczxczxc",
+            "post_chunk_hash": "chunk1655598279248_d26d8c43-938b-47e7-9455-4c3e51bd6506",
+            "createdAt": "2022-06-19T00:24:39.000Z",
+            "updatedAt": "2022-06-19T00:24:39.000Z"
+        },
+	   ]
+	}
+
+
+//видалити частину поста
+@api/posts/posts-chunk/:chunk_hash?userToken=  DELETE
+
+
+:chunk_hash // @required це хеш чанка 
+?userToken // @required це токен юзера, і адмінський він тільки один
+
+@Example::
+
+http://localhost:8080/api/posts/posts-chunk/chunk1655598273167_5885a6db-1d26-46ae-ac1c-547d95259fbe?userToken=165541267244837807d2f-257e-427f-a0a8-328835680b18 
+
+
+@return {
+    "statusCode": 200,
+    "statusMessage": "OK"
+}
+
+
+
+@api/posts/posts-chunk/:chunk_hash/update-chunk POST
+
+
+:chunk_hash // @required це хеш чанка 
+
+file: File // файл
+content: string // @len 3 - 5000
+title: string
+userToken: string //@required
+
+@Example:: 
+
+{
+ 	v discorde
+}
+
+
+
+@return {
+    "statusCode": 200,
+    "statusMessage": "OK",
+    "data": {
+        "post_hash": "posts_1655598273167_0f0d0c54-d67c-4deb-bcb3-a4b387a454ce",
+        "image": "",
+        "content": "123312312312312231321123",
+        "title": "C#zxczxczxc213123123123",
+        "userToken": "165541267244837807d2f-257e-427f-a0a8-328835680b18"
+    }
+}
+
+
+//Комменти
+
+@api/comments/add-comment POST
+
+userToken: string // @required
+text: string // @len 3 - 300
+post_hash: string // @required
+
+@Example:: 
+{
+    "post_hash": "posts_1655598273167_0f0d0c54-d67c-4deb-bcb3-a4b387a454ce",
+    "text": "GGG",
+    "userToken": "1655596892321564c125d-ec5d-4ddf-a91a-52094c366392"
+}
+
+@return {
+    "statusCode": 200,
+    "statusMessage": "OK",
+    "data": {
+        "id": 5,
+        "post_hash": "posts_1655598273167_0f0d0c54-d67c-4deb-bcb3-a4b387a454ce",
+        "text": "GGG",
+        "userToken": "1655596892321564c125d-ec5d-4ddf-a91a-52094c366392",
+        "comment_hash": "comment_1655599505593115f1920-7ff2-48b4-ae07-508a4e218155",
+        "userName": "Hello",
+        "updatedAt": "2022-06-19T00:45:05.595Z",
+        "createdAt": "2022-06-19T00:45:05.595Z"
+    }
+}
+
+@api/comments/get-comments/:post_hash GET
+
+:post_hash //@required - хеш поста
+
+
+@Example::
+http://localhost:8080/api/comments/get-comments/posts_1655598273167_0f0d0c54-d67c-4deb-bcb3-a4b387a454ce
+
+@return{
+    "statusCode": 200,
+    "statusMessage": "OK",
+    "data": [
+        {
+            "id": 5,
+            "userToken": "1655596892321564c125d-ec5d-4ddf-a91a-52094c366392",
+            "userName": "Hello",
+            "text": "GGG",
+            "post_hash": "posts_1655598273167_0f0d0c54-d67c-4deb-bcb3-a4b387a454ce",
+            "comment_hash": "comment_1655599505593115f1920-7ff2-48b4-ae07-508a4e218155",
+            "createdAt": "2022-06-19T00:45:05.000Z",
+            "updatedAt": "2022-06-19T00:45:05.000Z"
+        }
+    ]
+}
+
+
+@api/comments/delete-comments?comment_hash= DELETE
+
+?comment_hash= // @required хеш коммента
+
+
+@Example::
+
+http://localhost:8080/api/comments/delete-comments?comment_hash=comment_1655599505593115f1920-7ff2-48b4-ae07-508a4e218155
+
+@return {
+    "statusCode": 200,
+    "statusMessage": "OK"
+}
+
+
+@api/comments/update-comments PATCH
+
+text: string // @len 3 - 300 @required
+comment_hash : string // @required
+userToken: string // @required
+
+@Example:: {
+    "text": "xzczxczxczxczxczxczxczxczxczxczxczxczxczxczxczxczxcz",
+    "comment_hash": "comment_1655599898426f824d586-5013-44f7-b5a8-1efaf13d5cfc",
+    "userToken": "1655596892321564c125d-ec5d-4ddf-a91a-52094c366392"
+}
+
+
+@return {
+    "statusCode": 200,
+    "statusMessage": "OK",
+}
+
+
+
+
+
+
+
+
+
+
